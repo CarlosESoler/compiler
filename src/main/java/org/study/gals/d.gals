@@ -1,0 +1,77 @@
+#Options
+GenerateScanner = true
+GenerateParser = false
+Language = Java
+ScannerName = Lexico
+ScannerCaseSensitive = true
+ScannerTable = Compact
+Input = String
+#RegularDefinitions
+d: [0-9]
+u: _
+min: [a-z]
+mai:[A-Z]
+t: ({min} | {d} | {u}{d})
+#Tokens
+// identificador
+id: {min}({t}|{mai}{t})*{mai}?
+
+// constante_int
+cte_int: {d}+
+
+// constante_float
+cte_float: {d}+"."{d}+
+
+// constante_char
+cte_char: "\"(n|s|t)
+
+// constante_string
+cte_string: \"([^\n\"\\"%"]*("%"x)*)*\"
+
+// comentário de linha
+:! "#"[^\n]*
+
+// comentário de bloco
+:! "{"\n[^"{""}"]*\n"}"
+
+// caracteres de formatação
+:[\n\t\s]
+
+// palavras reservadas
+pr_bool = id: "bool"  
+pr_case = id: "case"  
+pr_char = id: "char"  
+pr_echo = id: "echo"  
+pr_do = id: "do"  
+pr_end = id: "end"  
+pr_false = id: "false"  
+pr_float = id: "float"  
+pr_int = id: "int"  
+pr_local = id: "local"  
+pr_module = id: "module"  
+pr_request = id: "request"  
+pr_string = id: "string"  
+pr_switch = id: "switch"  
+pr_true = id: "true"  
+pr_until = id: "until"  
+pr_while = id: "while"  
+
+// simbolos especiais
+"&"
+"|"
+"!"
+"=="
+"!="
+"<"
+">"
+"+"
+"-"
+"*"
+"/"
+","
+";"
+"="
+"("
+")"
+
+
