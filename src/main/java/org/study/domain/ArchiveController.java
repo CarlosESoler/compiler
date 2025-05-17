@@ -16,7 +16,6 @@ public class ArchiveController {
     
     private File file;
 
-
     public File getFile() {
         return file;
     }

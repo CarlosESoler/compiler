@@ -7,10 +7,6 @@ package org.study.view;
 
 import org.study.domain.ArchiveController;
 import org.study.domain.CompilerController;
-import org.study.domain.LexicalController;
-import org.study.gals.LexicalError;
-import org.study.gals.Lexico;
-import org.study.gals.Sintatico;
 
 import javax.swing.*;
 import java.awt.*;

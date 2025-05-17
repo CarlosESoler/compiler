@@ -18,8 +18,7 @@ public class CompilerController {
         } catch (LexicalError e) {
             return lexicalController.parseLexemeError(e);
         } catch (SyntaticError e) {
-            syntaticController.setToken(sintatico.getCurrentToken());
-            return syntaticController.parseSyntaticError(e);
+            return syntaticController.parseSyntaticError(e, sintatico.getCurrentToken());
         } catch (SemanticError e) {
             return "Erro semântico: " + e.getMessage();
         }
