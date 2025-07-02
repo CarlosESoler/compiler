@@ -7,21 +7,19 @@ package org.study.view;
 
 import org.study.domain.ArchiveController;
 import org.study.domain.CompilerController;
-import org.study.domain.LexicalController;
-import org.study.gals.LexicalError;
-import org.study.gals.Lexico;
-import org.study.gals.Sintatico;
+import org.study.domain.SemanticController;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
 
 public class AppUI extends JFrame {
     
-    ArchiveController archiveController = new ArchiveController();
-    CompilerController compilerController = new CompilerController();
+    ArchiveController compileArchiveController = new ArchiveController();
+    ArchiveController compiledArchiveController = new ArchiveController();
 
     /**
      * Creates new form AppUI
@@ -36,7 +34,8 @@ public class AppUI extends JFrame {
         callShortHandMethod(teamButton, "Equipe", KeyEvent.VK_F1, 0);
     }
     
-    private void compile() {
+    private void compile() throws IOException {
+        CompilerController compilerController = new CompilerController();
         clearMessageArea();
         String text = editorArea.getText();
 
@@ -44,7 +43,12 @@ public class AppUI extends JFrame {
             messageArea.append("Nada para compilar!");
             return;
         }
-        messageArea.setText(compilerController.compile(text));
+        String compiledText = compilerController.compile(text);
+        messageArea.setText(compiledText);
+        if(!compiledText.equals("Programa compilado com sucesso")) {
+            return;
+        }
+        compiledArchiveController.generateIlFile(compileArchiveController.getFile().getAbsolutePath(), String.valueOf(SemanticController.programText));
     }
 
     private void clearAllAreas() {
@@ -59,15 +63,16 @@ public class AppUI extends JFrame {
     }
 
     private void openFile() {
-        clearAllAreas();
-        archiveController.chooseFile(this);
-        if(archiveController.getFile() != null) {
-            String fileText = archiveController.readFile().replaceAll("\r", "");
+        clearMessageArea();
+        clearStatusArea();
+        compileArchiveController.chooseFile(this);
+        if(compileArchiveController.getFile() != null && compileArchiveController.getFile().exists()) {
+            String fileText = compileArchiveController.readFile().replaceAll("\r", "");
             editorArea.setText(fileText);
-            updateStatusBar(archiveController.getFile().getAbsolutePath());
+            updateStatusBar(compileArchiveController.getFile().getAbsolutePath());
             return;
         }
-        statusArea.setText("Selecione um arquivo!");
+        updateStatusBar("Selecione um arquivo!");
     }
 
     private void clearMessageArea() {
@@ -88,8 +93,12 @@ public class AppUI extends JFrame {
 
     private void saveFile() {
         clearMessageArea();
-        archiveController.saveFile(editorArea.getText(), this);
-        updateStatusBar(archiveController.getFile().getAbsolutePath());
+        try {
+            compileArchiveController.saveFile(editorArea.getText(), this);
+            updateStatusBar(compileArchiveController.getFile().getAbsolutePath());
+        } catch (Exception e) {
+            updateStatusBar("Nenhum arquivo selecionado para salvar!\n");
+        }
     }
 
     private void copy() {
@@ -387,12 +396,16 @@ public class AppUI extends JFrame {
     }//GEN-LAST:event_teamButtonActionPerformed
 
     private void newButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_newButtonActionPerformed
-        archiveController.setFile(null);
+        compileArchiveController.setFile(null);
         clearAllAreas();
     }//GEN-LAST:event_newButtonActionPerformed
 
     private void compileButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_compileButtonActionPerformed
-        compile();
+        try {
+            compile();
+        } catch (Exception e) {
+
+        }
     }//GEN-LAST:event_compileButtonActionPerformed
 
     private void openArchiveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openArchiveButtonActionPerformed

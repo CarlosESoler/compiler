@@ -13,9 +13,6 @@ import java.awt.*;
  */
 class NumberedBorder extends AbstractBorder {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -5089118025935944759L;
 
 	private static int lineHeight;

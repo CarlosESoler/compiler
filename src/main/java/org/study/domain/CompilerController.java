@@ -3,25 +3,30 @@ package org.study.domain;
 import org.study.gals.*;
 
 public class CompilerController {
-    private final Lexico lexico = new Lexico();
-    private final Sintatico sintatico = new Sintatico();
-    private final Semantico semantico = new Semantico();
+    Lexico lexico;
+    Sintatico sintatico;
+    Semantico semantico;
 
     public String compile(String text) {
-        LexicalController lexicalController = new LexicalController(text);
-        SyntaticController syntaticController = new SyntaticController(text);
+        lexico = new Lexico();
+        sintatico = new Sintatico();
+        semantico = new Semantico();
+
+        final LexicalController lexicalController = new LexicalController(text);
+        final SyntacticController syntacticController = new SyntacticController(text);
+        final SemanticController semanticController = new SemanticController();
 
         lexico.setInput(text);
+
         try {
             lexicalController.generateLexicalAnalysis();
             sintatico.parse(lexico, semantico);
         } catch (LexicalError e) {
             return lexicalController.parseLexemeError(e);
         } catch (SyntaticError e) {
-            syntaticController.setToken(sintatico.getCurrentToken());
-            return syntaticController.parseSyntaticError(e);
+            return syntacticController.parseSyntacticError(e, sintatico.getCurrentToken());
         } catch (SemanticError e) {
-            return "Erro semântico: " + e.getMessage();
+            return semanticController.parseSemanticError(e, text);
         }
         return "Programa compilado com sucesso";
     }

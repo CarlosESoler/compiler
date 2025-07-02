@@ -6,25 +6,19 @@ import org.study.gals.Lexico;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class LexicalController {
-    private final String text;
+public record LexicalController(String text) {
 
-    public LexicalController(String text) {
-        this.text = text;
-    }
-
-    @Deprecated
     public void generateLexicalAnalysis() throws LexicalError {
-        Lexico lexico = new Lexico(getText());
+        Lexico lexico = new Lexico(text());
         while ((lexico.nextToken()) != null) {
         }
     }
 
     public String parseLexemeError(LexicalError e) {
-        StringBuilder message = new StringBuilder("Linha " + TextUtils.getLineNumber(getText(), e.getPosition()) + ": ");
+        StringBuilder message = new StringBuilder("Linha " + TextUtils.getLineNumber(text(), e.getPosition()) + ": ");
         String getLexemeError = getLexemeError(e.getPosition());
         String errorMessage = e.getMessage();
-        if(needLexeme(e.getMessage())) {
+        if (needLexeme(e.getMessage())) {
             message.append(getLexemeError).append(" ").append(errorMessage);
         } else {
             message.append(errorMessage);
@@ -37,8 +31,8 @@ public class LexicalController {
         return !(errorMessage.contains("constante_string") || errorMessage.contains("bloco") || errorMessage.contains("constate_char"));
     }
 
-    private String getLexemeError(int position){
-        String lexemeError = getText().substring(position);
+    private String getLexemeError(int position) {
+        String lexemeError = text().substring(position);
         Pattern lineEnd = Pattern.compile("\r\n|\n|\r| ");
         Matcher searchLineEnd = lineEnd.matcher(lexemeError);
 
@@ -47,9 +41,5 @@ public class LexicalController {
         }
 
         return lexemeError;
-    }
-
-    public String getText() {
-        return text;
     }
 }
