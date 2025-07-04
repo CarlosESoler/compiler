@@ -44,15 +44,15 @@ public class SemanticRepository {
     }
 
     public static String loadIntValue(String lexeme) {
-        return ("ldc.i8 " + lexeme + CONVERT_FLOAT + BREAK_LINE);
+        return ("ldc.i8 " + lexeme + " " + CONVERT_FLOAT + BREAK_LINE);
     }
 
-    public static String loadTrue(String lexeme) {
-        return "ldc.i4.1 " + lexeme + BREAK_LINE;
+    public static String loadTrue() {
+        return "ldc.i4.1 "  + BREAK_LINE;
     }
 
-    public static String loadFalse(String lexeme) {
-        return "ldc.i4.0 " + lexeme + BREAK_LINE;
+    public static String loadFalse() {
+        return "ldc.i4.0 " + BREAK_LINE;
     }
 
     public static String loadFloatValue(String lexeme) {

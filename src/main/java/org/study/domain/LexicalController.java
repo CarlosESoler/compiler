@@ -15,7 +15,7 @@ public record LexicalController(String text) {
     }
 
     public String parseLexemeError(LexicalError e) {
-        StringBuilder message = new StringBuilder("Linha " + TextUtils.getLineNumber(text(), e.getPosition()) + ": ");
+        StringBuilder message = new StringBuilder("Erro na linha " + TextUtils.getLineNumber(text(), e.getPosition()) + ": ");
         String getLexemeError = getLexemeError(e.getPosition());
         String errorMessage = e.getMessage();
         if (needLexeme(e.getMessage())) {

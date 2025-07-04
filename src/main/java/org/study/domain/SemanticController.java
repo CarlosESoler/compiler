@@ -26,6 +26,10 @@ public class SemanticController {
         put("bool", "bool");
     }};
 
+    private Stack<String> labelsStack = new Stack<>();
+    private int labelCounter = 0;
+    private String currentRelationalOperator;
+
     public SemanticController() {
         programText = new StringBuilder();
     }
@@ -86,7 +90,7 @@ public class SemanticController {
 
         if(!symbolsTable.containsKey(identifier.getLexeme())) {
             logger.error("Token {} não foi declarado.", identifier.getLexeme());
-            throw new SemanticError("Identificador " + identifier.getLexeme() + " não foi declarado.");
+            throw new SemanticError("Identificador " + identifier.getLexeme() + " não foi declarado.", identifier.getPosition());
         }
 
         programText.append(SemanticRepository.loadValueInIdentifier(identifier.getLexeme()));
@@ -103,14 +107,14 @@ public class SemanticController {
 
         if(!symbolsTable.containsKey(tokenLexeme)) {
             logger.error("Token {} não foi declarado.", tokenLexeme);
-            throw new SemanticError("Identificador " + tokenLexeme + " não foi declarado.");
+            throw new SemanticError("Identificador " + tokenLexeme + " não foi declarado.", identifier.getPosition());
         }
 
 
         List<String> invalidTypes = List.of(mapSemanticTypes.get("char"), mapSemanticTypes.get("bool"));
         if(invalidTypes.contains(identifierType)) {
             logger.error("Tipo do identificador {} é {}, mas esperado int ou float.", tokenLexeme, identifierType);
-            throw new SemanticError(tokenLexeme + " inválido para comando de entrada.");
+            throw new SemanticError(tokenLexeme + " inválido para comando de entrada.", identifier.getPosition());
         }
 
         programText.append(SemanticRepository.READ_LINE);
@@ -134,32 +138,48 @@ public class SemanticController {
         logProgramText();
     }
 
+    // Action 117
+    public void handleAction117() {
+        String type2 = typeStack.pop();
+        String type1 = typeStack.pop();
+
+        typeStack.push("bool");
+
+        programText.append("and").append("\n");
+    }
+
+    // Action 118
+    public void handleAction118() {
+        String type2 = typeStack.pop();
+        String type1 = typeStack.pop();
+
+        typeStack.push("bool");
+
+        programText.append("or").append("\n");
+    }
+
     // Action 119
-    public void loadTrue(Token token) {
+    public void loadTrue() {
         String semanticBool = mapSemanticTypes.get("bool");
         typeStack.push(semanticBool);
-        programText.append(SemanticRepository.loadTrue(token.getLexeme()));
+        programText.append(SemanticRepository.loadTrue());
         logProgramText();
     }
 
     // Action 120
-    public void loadFalse(Token token) {
+    public void loadFalse() {
         String semanticBool = mapSemanticTypes.get("bool");
         typeStack.push(semanticBool);
-        programText.append(SemanticRepository.loadFalse(token.getLexeme()));
+        programText.append(SemanticRepository.loadFalse());
         logProgramText();
     }
 
     // Action 121
-    public void notExpression(Token token) throws SemanticError {
-        logToken(token);
+    public void notExpression() {
         String type = typeStack.pop();
-        if(!type.equals(mapSemanticTypes.get("bool"))) {
-            logger.error("Operador NOT só pode ser aplicado a expressões booleanas.");
-            throw new SemanticError("Operador NOT só pode ser aplicado a expressões booleanas.");
-        }
-        programText.append(SemanticRepository.notExpression());
-        logProgramText();
+        typeStack.push("bool");
+        programText.append("ldc.i4.1\n");
+        programText.append("xor\n");
     }
 
     // Action 128
@@ -168,7 +188,7 @@ public class SemanticController {
         String tokenLexeme = token.getLexeme();
         if(!symbolsTable.containsKey(tokenLexeme)) {
             logger.error("Identificador {} não foi declarado.", tokenLexeme);
-            throw new SemanticError("Identificador " + tokenLexeme + " não foi declarado.");
+            throw new SemanticError(tokenLexeme + " não foi declarado.", token.getPosition());
         }
         String tokenSemanticType = symbolsTable.get(tokenLexeme);
         typeStack.push(tokenSemanticType);
@@ -211,16 +231,100 @@ public class SemanticController {
         logProgramText();
     }
 
-    // Action 133 - para o operador aritmético unário
-    public void unaryOperator() {
+    private String generateNewLabel() {
+        return "L" + (labelCounter++);
     }
 
+    public void handleAction109() {
+        String endSwitchLabel = generateNewLabel();
+        labelsStack.push(endSwitchLabel);
+    }
 
+    public void handleAction110() {
+        programText.append("pop\n");
+        String endSwitchLabel = labelsStack.pop();
+        programText.append(endSwitchLabel).append(":\n");
+    }
 
-    public String parseSemanticError(SemanticError error, String text) {
-        String errorMessage = "Erro na linha " + TextUtils.getLineNumber(text, error.getPosition()) + " - " + error.getMessage();
-        logger.error(errorMessage);
-        return errorMessage;
+    public void handleAction111() {
+        programText.append("dup\n");
+    }
+
+    public void handleAction112() {
+        programText.append("ceq\n");
+        String nextCaseOrEndLabel = generateNewLabel();
+        labelsStack.push(nextCaseOrEndLabel);
+        programText.append("brfalse ").append(nextCaseOrEndLabel).append("\n");
+    }
+
+    public void handleAction113() {
+        programText.append("pop\n");
+        String nextCaseOrEndLabel = labelsStack.pop();
+        String endSwitchLabel = labelsStack.pop();
+        programText.append("br ").append(endSwitchLabel).append("\n");
+        programText.append(nextCaseOrEndLabel).append(":\n");
+        labelsStack.push(endSwitchLabel);
+    }
+
+    public void handleAction114() {
+        String loopStartLabel = generateNewLabel();
+        programText.append(loopStartLabel).append(":\n");
+        labelsStack.push(loopStartLabel);
+    }
+
+    public void handleAction115() {
+        String loopStartLabel = labelsStack.pop();
+        programText.append("brtrue ").append(loopStartLabel).append("\n");
+    }
+
+    public void handleAction116() {
+        String loopStartLabel = labelsStack.pop();
+        programText.append("brfalse ").append(loopStartLabel).append("\n");
+    }
+
+    public void unaryOperator() {
+        programText.append("neg \n");
+        logProgramText();
+    }
+
+    public void handleAction124() {
+        processBinaryArithmetic("add");
+    }
+
+    public void handleAction125() {
+        processBinaryArithmetic("sub");
+    }
+
+    public void handleAction126() {
+        processBinaryArithmetic("mul");
+    }
+
+    public void handleAction127() {
+        processBinaryArithmetic("div");
+    }
+
+    public void processBinaryArithmetic(String operator) {
+        String type2 = typeStack.pop();
+        String type1 = typeStack.pop();
+
+        String resultType = getResultingArithmeticType(type1, type2, operator);
+        typeStack.push(resultType);
+        programText.append(operator).append("\n");
+    }
+
+    private String getResultingArithmeticType(String type1, String type2, String operator) {
+        // If any operand is float64, the result is float64 (type promotion).
+        if (type1.equals("float64") || type2.equals("float64")) {
+            return "float64";
+        }
+        if (operator.equals("div")) {
+            return "float64";
+        }
+        return "int64";
+    }
+
+    public void storeRelationalOperator(Token token) {
+        this.currentRelationalOperator = token.getLexeme();
     }
 
 
@@ -234,5 +338,30 @@ public class SemanticController {
 
     private void logToken(Token token) {
         logger.info("Token: {}", token.getLexeme());
+    }
+
+    public void handleAction123() {
+        String type2 = typeStack.pop();
+        String type1 = typeStack.pop();
+
+        typeStack.push("bool");
+
+        switch (currentRelationalOperator) {
+            case "=":
+                programText.append("ceq\n");
+                break;
+            case "!":
+                programText.append("ceq\n");
+                programText.append("ldc.i4.1\n");
+                programText.append("xor\n");
+                break;
+            case "<":
+                programText.append("clt\n");
+                break;
+            case ">":
+                programText.append("cgt\n");
+                break;
+        }
+        currentRelationalOperator = "";
     }
 }

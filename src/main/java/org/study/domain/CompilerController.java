@@ -11,10 +11,9 @@ public class CompilerController {
         lexico = new Lexico();
         sintatico = new Sintatico();
         semantico = new Semantico();
-
         final LexicalController lexicalController = new LexicalController(text);
         final SyntacticController syntacticController = new SyntacticController(text);
-        final SemanticController semanticController = new SemanticController();
+        final SemanticErrorController semanticController = new SemanticErrorController(text);
 
         lexico.setInput(text);
 
@@ -26,7 +25,7 @@ public class CompilerController {
         } catch (SyntaticError e) {
             return syntacticController.parseSyntacticError(e, sintatico.getCurrentToken());
         } catch (SemanticError e) {
-            return semanticController.parseSemanticError(e, text);
+            return semanticController.parseSemanticError(e);
         }
         return "Programa compilado com sucesso";
     }

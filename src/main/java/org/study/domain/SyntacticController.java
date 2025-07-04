@@ -7,7 +7,7 @@ public record SyntacticController(String text) {
 
     public String parseSyntacticError(SyntaticError e, Token token) {
         int errorLine = TextUtils.getLineNumber(text(), e.getPosition());
-        StringBuilder message = new StringBuilder("Linha " + errorLine + ": ");
+        StringBuilder message = new StringBuilder("Erro na linha " + errorLine + ": ");
         String errorMessage = e.getMessage();
         String tokenLexeme = token.getLexeme().equals("$") ? "EOF" : token.getLexeme();
         String lexicalClass = token.getId() == 6 ? "constante_string" : tokenLexeme;
